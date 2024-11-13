@@ -2,10 +2,17 @@
 //
 
 #include <iostream>
+#include <GLFW/glfw3.h>
 
 int main()
 {
-    std::cout << "Hello World!\n";
+  GLFWwindow* window;
+
+  /* Initialize the library */
+  if (!glfwInit())
+    return -1;
+
+  std::cout << "Hello World!\n";
 }
 
 // プログラムの実行: Ctrl + F5 または [デバッグ] > [デバッグなしで開始] メニュー
