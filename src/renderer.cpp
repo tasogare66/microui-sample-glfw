@@ -87,6 +87,11 @@ void r_init(void) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   assert(glGetError() == 0);
 
+  // buffer
+  glGenBuffers(1, &vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
   // setup shader
   vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
@@ -113,6 +118,8 @@ void r_init(void) {
   glEnableVertexAttribArray(vcol_location);
   glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
     sizeof(vertices[0]), (void*)(sizeof(float) * 2));
+
+  assert(glGetError() == 0);
 }
 
 

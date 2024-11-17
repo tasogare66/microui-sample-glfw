@@ -247,11 +247,13 @@ int main(void)
     exit(EXIT_FAILURE);
   }
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+  // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+  // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  window = glfwCreateWindow(640, 480, "microui-sample", NULL, NULL);
+  window = glfwCreateWindow(800, 600, "microui-sample", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
