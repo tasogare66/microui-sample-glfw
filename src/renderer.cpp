@@ -15,6 +15,7 @@ static GLuint  index_buf[BUFFER_SIZE *  6];
 
 static GLuint vertex_buffer, vertex_shader, fragment_shader, program;
 static GLint mvp_location, vpos_location, vcol_location;
+static GLuint VAO, VBO, EBO;
 
 static int width  = 800;
 static int height = 600;
@@ -31,7 +32,7 @@ static const struct
     {   0.f,  0.6f, 0.f, 0.f, 1.f }
 };
 
-static const char* vertex_shader_text =
+static const char* vertex_shader_text_ =
 "#version 110\n"
 "uniform mat4 MVP;\n"
 "attribute vec3 vCol;\n"
@@ -43,7 +44,7 @@ static const char* vertex_shader_text =
 "    color = vCol;\n"
 "}\n";
 
-static const char* fragment_shader_text =
+static const char* fragment_shader_text_ =
 "#version 110\n"
 "varying vec3 color;\n"
 "void main()\n"
@@ -51,6 +52,19 @@ static const char* fragment_shader_text =
 "    gl_FragColor = vec4(color, 1.0);\n"
 "}\n";
 
+const char* vertex_shader_text = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+//Fragment Shader source code
+const char* fragment_shader_text = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(0.8f, 0.3f, 0.02f, 1.0f);\n"
+"}\n\0";
 
 void r_init(void) {
   /* init SDL window */
@@ -91,6 +105,60 @@ void r_init(void) {
   glGenBuffers(1, &vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  // buffer
+  {
+    GLfloat test_vertices[] =
+    {
+        -0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower left corner
+        0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower right corner
+        0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // Upper corner
+        -0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner left
+        0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner right
+        0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f // Inner down
+    };
+
+    // Indices for vertices order
+    GLuint test_indices[] =
+    {
+        0, 3, 5, // Lower left triangle
+        3, 2, 4, // Upper triangle
+        5, 4, 1 // Lower right triangle
+    };
+
+    // Create reference containers for the Vartex Array Object, the Vertex Buffer Object, and the Element Buffer Object
+
+    // Generate the VAO, VBO, and EBO with only 1 object each
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    // Make the VAO the current Vertex Array Object by binding it
+    glBindVertexArray(VAO);
+
+    // Bind the VBO specifying it's a GL_ARRAY_BUFFER
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // Introduce the vertices into the VBO
+    glBufferData(GL_ARRAY_BUFFER, sizeof(test_vertices), test_vertices, GL_STATIC_DRAW);
+
+    // Bind the EBO specifying it's a GL_ELEMENT_ARRAY_BUFFER
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    // Introduce the indices into the EBO
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(test_indices), test_indices, GL_STATIC_DRAW);
+
+    // Configure the Vertex Attribute so that OpenGL knows how to read the VBO
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // Enable the Vertex Attribute so that OpenGL knows to use it
+    glEnableVertexAttribArray(0);
+
+    // Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    // Bind the EBO to 0 so that we don't accidentally modify it
+    // MAKE SURE TO UNBIND IT AFTER UNBINDING THE VAO, as the EBO is linked in the VAO
+    // This does not apply to the VBO because the VBO is already linked to the VAO during glVertexAttribPointer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    assert(glGetError() == 0);
+  }
 
   // setup shader
   vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -107,17 +175,17 @@ void r_init(void) {
   glLinkProgram(program);
   assert(glGetError() == 0);
 
-  mvp_location = glGetUniformLocation(program, "MVP");
-  vpos_location = glGetAttribLocation(program, "vPos");
-  vcol_location = glGetAttribLocation(program, "vCol");
+  //mvp_location = glGetUniformLocation(program, "MVP");
+  //vpos_location = glGetAttribLocation(program, "vPos");
+  //vcol_location = glGetAttribLocation(program, "vCol");
 
-  glEnableVertexAttribArray(vpos_location);
-  glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-    sizeof(vertices[0]), (void*)0);
+  //glEnableVertexAttribArray(vpos_location);
+  //glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
+  //  sizeof(vertices[0]), (void*)0);
 
-  glEnableVertexAttribArray(vcol_location);
-  glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-    sizeof(vertices[0]), (void*)(sizeof(float) * 2));
+  //glEnableVertexAttribArray(vcol_location);
+  //glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
+  //  sizeof(vertices[0]), (void*)(sizeof(float) * 2));
 
   assert(glGetError() == 0);
 }
@@ -156,8 +224,10 @@ static void flush(void) {
   mat4x4_mul(mvp, p, m);
 
   glUseProgram(program);
-  glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  //glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
+  //glDrawArrays(GL_TRIANGLES, 0, 3);
+  glBindVertexArray(VAO);
+  glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
 
   buf_idx = 0;
 }
