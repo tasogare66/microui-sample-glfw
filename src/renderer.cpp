@@ -32,6 +32,24 @@ static const struct
     {   0.f,  0.6f, 0.f, 0.f, 1.f }
 };
 
+GLfloat test_vertices[] =
+{
+    -0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower left corner
+    0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower right corner
+    0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // Upper corner
+    -0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner left
+    0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner right
+    0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f // Inner down
+};
+
+// Indices for vertices order
+GLuint test_indices[] =
+{
+    0, 3, 5, // Lower left triangle
+    3, 2, 4, // Upper triangle
+    5, 4, 1 // Lower right triangle
+};
+
 static const char* vertex_shader_text_ =
 "#version 110\n"
 "uniform mat4 MVP;\n"
@@ -53,10 +71,11 @@ static const char* fragment_shader_text_ =
 "}\n";
 
 const char* vertex_shader_text = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
+"uniform mat4 MVP;\n"
+"layout (location = 0) in vec2 aPos;\n"
 "void main()\n"
 "{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"   gl_Position = MVP * vec4(aPos, 0.0, 1.0);\n"
 "}\0";
 //Fragment Shader source code
 const char* fragment_shader_text = "#version 330 core\n"
@@ -107,24 +126,6 @@ void r_init(void) {
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   // buffer
   {
-    GLfloat test_vertices[] =
-    {
-        -0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower left corner
-        0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower right corner
-        0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // Upper corner
-        -0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner left
-        0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner right
-        0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f // Inner down
-    };
-
-    // Indices for vertices order
-    GLuint test_indices[] =
-    {
-        0, 3, 5, // Lower left triangle
-        3, 2, 4, // Upper triangle
-        5, 4, 1 // Lower right triangle
-    };
-
     // Create reference containers for the Vartex Array Object, the Vertex Buffer Object, and the Element Buffer Object
 
     // Generate the VAO, VBO, and EBO with only 1 object each
@@ -138,15 +139,15 @@ void r_init(void) {
     // Bind the VBO specifying it's a GL_ARRAY_BUFFER
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Introduce the vertices into the VBO
-    glBufferData(GL_ARRAY_BUFFER, sizeof(test_vertices), test_vertices, GL_STATIC_DRAW);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(test_vertices), test_vertices, GL_STATIC_DRAW);
 
     // Bind the EBO specifying it's a GL_ELEMENT_ARRAY_BUFFER
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     // Introduce the indices into the EBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(test_indices), test_indices, GL_STATIC_DRAW);
+//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(test_indices), test_indices, GL_STATIC_DRAW);
 
     // Configure the Vertex Attribute so that OpenGL knows how to read the VBO
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     // Enable the Vertex Attribute so that OpenGL knows to use it
     glEnableVertexAttribArray(0);
 
@@ -175,7 +176,7 @@ void r_init(void) {
   glLinkProgram(program);
   assert(glGetError() == 0);
 
-  //mvp_location = glGetUniformLocation(program, "MVP");
+  mvp_location = glGetUniformLocation(program, "MVP");
   //vpos_location = glGetAttribLocation(program, "vPos");
   //vcol_location = glGetAttribLocation(program, "vCol");
 
@@ -220,14 +221,21 @@ static void flush(void) {
   mat4x4 m, p, mvp;
   mat4x4_identity(m);
   //mat4x4_rotate_Z(m, m, (float)glfwGetTime());
-  mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+  //mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+  mat4x4_ortho(p, 0.0f, width, height, 0.f, 1.f, -1.f);
   mat4x4_mul(mvp, p, m);
 
   glUseProgram(program);
-  //glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
+  glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
   //glDrawArrays(GL_TRIANGLES, 0, 3);
   glBindVertexArray(VAO);
-  glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
+  // Bind the VBO specifying it's a GL_ARRAY_BUFFER
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * buf_idx * 8, vert_buf, GL_STATIC_DRAW);
+  // Bind the EBO specifying it's a GL_ELEMENT_ARRAY_BUFFER
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * buf_idx * 6, index_buf, GL_STATIC_DRAW);
+  glDrawElements(GL_TRIANGLES, buf_idx * 6, GL_UNSIGNED_INT, 0);
 
   buf_idx = 0;
 }
