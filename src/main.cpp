@@ -230,13 +230,11 @@ void process_frame(mu_Context* ctx) {
 
 static int text_width(mu_Font font, const char* text, int len) {
   if (len == -1) { len = static_cast<int>(strlen(text)); }
-  //return r_get_text_width(text, len);
-  return 16;
+  return r_get_text_width(text, len);
 }
 
 static int text_height(mu_Font font) {
-  //return r_get_text_height();
-  return 16;
+  return r_get_text_height();
 }
 
 int main(void)
@@ -253,12 +251,6 @@ int main(void)
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  /* init microui */
-  mu_Context* ctx = reinterpret_cast<mu_Context*>(malloc(sizeof(mu_Context)));
-  mu_init(ctx);
-  ctx->text_width = text_width;
-  ctx->text_height = text_height;
-
   window = glfwCreateWindow(640, 480, "microui-sample", NULL, NULL);
   if (!window)
   {
@@ -272,7 +264,14 @@ int main(void)
   gladLoadGL(); // gladLoadGL(glfwGetProcAddress) if glad generated without a loader
   glfwSwapInterval(1);
 
-  glClearColor(1.0, 0.0, 0.0, 1.0);
+  r_init();
+  /* init microui */
+  mu_Context* ctx = reinterpret_cast<mu_Context*>(malloc(sizeof(mu_Context)));
+  mu_init(ctx);
+  ctx->text_width = text_width;
+  ctx->text_height = text_height;
+
+  //glClearColor(0.0, 0.0, 0.0, 1.0);
   while (!glfwWindowShouldClose(window))
   {
     glfwPollEvents();
@@ -287,13 +286,14 @@ int main(void)
     mu_Command* cmd = NULL;
     while (mu_next_command(ctx, &cmd)) {
       switch (cmd->type) {
-      //case MU_COMMAND_TEXT: r_draw_text(cmd->text.str, cmd->text.pos, cmd->text.color); break;
-      //case MU_COMMAND_RECT: r_draw_rect(cmd->rect.rect, cmd->rect.color); break;
-      //case MU_COMMAND_ICON: r_draw_icon(cmd->icon.id, cmd->icon.rect, cmd->icon.color); break;
-      //case MU_COMMAND_CLIP: r_set_clip_rect(cmd->clip.rect); break;
+      case MU_COMMAND_TEXT: r_draw_text(cmd->text.str, cmd->text.pos, cmd->text.color); break;
+      case MU_COMMAND_RECT: r_draw_rect(cmd->rect.rect, cmd->rect.color); break;
+      case MU_COMMAND_ICON: r_draw_icon(cmd->icon.id, cmd->icon.rect, cmd->icon.color); break;
+      case MU_COMMAND_CLIP: r_set_clip_rect(cmd->clip.rect); break;
       }
     }
 
+    r_present();
     glfwSwapBuffers(window);
   }
 
