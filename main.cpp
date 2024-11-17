@@ -9,6 +9,7 @@
 extern "C" {
 #include "microui.h"
 }
+#include "src/renderer.h"
 
 static void error_callback(int error, const char* description)
 {
@@ -282,7 +283,7 @@ int main(void)
     process_frame(ctx);
 
     /* render */
-    //r_clear(mu_color(bg[0], bg[1], bg[2], 255));
+    r_clear(mu_color(bg[0], bg[1], bg[2], 255));
     mu_Command* cmd = NULL;
     while (mu_next_command(ctx, &cmd)) {
       switch (cmd->type) {

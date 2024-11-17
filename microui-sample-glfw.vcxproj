@@ -150,9 +150,11 @@
     <ClCompile Include="externals\glad\src\glad.c" />
     <ClCompile Include="externals\microui\src\microui.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\microui\src\microui.h" />
+    <ClInclude Include="src\renderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
