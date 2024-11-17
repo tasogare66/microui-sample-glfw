@@ -149,7 +149,7 @@
   <ItemGroup>
     <ClCompile Include="externals\glad\src\glad.c" />
     <ClCompile Include="externals\microui\src\microui.c" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
