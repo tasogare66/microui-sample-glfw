@@ -13,6 +13,13 @@ static GLfloat  vert_buf[BUFFER_SIZE *  8];
 static GLubyte color_buf[BUFFER_SIZE * 16];
 static GLuint  index_buf[BUFFER_SIZE *  6];
 
+struct VertexData {
+  vec2 m_pos;
+  //graphics::vec2 m_uv;
+  //sf::Color m_color;
+};
+static VertexData vertex_buf[BUFFER_SIZE * 4];
+
 static GLuint vertex_buffer, vertex_shader, fragment_shader, program;
 static GLint mvp_location, vpos_location, vcol_location;
 static GLuint VAO, VBO, EBO;
@@ -231,7 +238,7 @@ static void flush(void) {
   glBindVertexArray(VAO);
   // Bind the VBO specifying it's a GL_ARRAY_BUFFER
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * buf_idx * 8, vert_buf, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(VertexData) * buf_idx * 4, vertex_buf, GL_STATIC_DRAW);
   // Bind the EBO specifying it's a GL_ELEMENT_ARRAY_BUFFER
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * buf_idx * 6, index_buf, GL_STATIC_DRAW);
@@ -273,6 +280,19 @@ static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
   vert_buf[texvert_idx + 5] = dst.y + dst.h;
   vert_buf[texvert_idx + 6] = dst.x + dst.w;
   vert_buf[texvert_idx + 7] = dst.y + dst.h;
+
+  auto& buf0 = vertex_buf[element_idx + 0];
+  buf0.m_pos[0] = dst.x;
+  buf0.m_pos[1] = dst.y;
+  auto& buf1 = vertex_buf[element_idx + 1];
+  buf1.m_pos[0] = dst.x + dst.w;
+  buf1.m_pos[1] = dst.y;
+  auto& buf2 = vertex_buf[element_idx + 2];
+  buf2.m_pos[0] = dst.x;
+  buf2.m_pos[1] = dst.y + dst.h;
+  auto& buf3 = vertex_buf[element_idx + 3];
+  buf3.m_pos[0] = dst.x + dst.w;
+  buf3.m_pos[1] = dst.y + dst.h;
 
   /* update color buffer */
   std::memcpy(color_buf + color_idx +  0, &color, 4);
