@@ -13,16 +13,9 @@ static GLfloat  vert_buf[BUFFER_SIZE *  8];
 static GLubyte color_buf[BUFFER_SIZE * 16];
 static GLuint  index_buf[BUFFER_SIZE *  6];
 
-struct VertexData {
-  vec2 m_pos;
-  //graphics::vec2 m_uv;
-  //sf::Color m_color;
-};
-static VertexData vertex_buf[BUFFER_SIZE * 4];
-
 static GLuint vertex_buffer, vertex_shader, fragment_shader, program;
 static GLint mvp_location, vpos_location, vcol_location;
-static GLuint VAO, VBO, EBO;
+static GLuint VAO, VBO[2], EBO;
 
 static int width  = 800;
 static int height = 600;
@@ -80,16 +73,21 @@ static const char* fragment_shader_text_ =
 const char* vertex_shader_text = "#version 330 core\n"
 "uniform mat4 MVP;\n"
 "layout (location = 0) in vec2 aPos;\n"
+"layout (location = 1) in vec4 aColor;\n"
+"out vec4 fColor;\n"
 "void main()\n"
 "{\n"
+"   fColor = aColor;\n"
 "   gl_Position = MVP * vec4(aPos, 0.0, 1.0);\n"
 "}\0";
 //Fragment Shader source code
 const char* fragment_shader_text = "#version 330 core\n"
+"in vec4 fColor;\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(0.8f, 0.3f, 0.02f, 1.0f);\n"
+"   //FragColor = vec4(0.8f, 0.3f, 0.02f, 1.0f);\n"
+"   FragColor = fColor;\n"
 "}\n\0";
 
 void r_init(void) {
@@ -137,14 +135,14 @@ void r_init(void) {
 
     // Generate the VAO, VBO, and EBO with only 1 object each
     glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    glGenBuffers(2, VBO);
     glGenBuffers(1, &EBO);
 
     // Make the VAO the current Vertex Array Object by binding it
     glBindVertexArray(VAO);
 
     // Bind the VBO specifying it's a GL_ARRAY_BUFFER
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     // Introduce the vertices into the VBO
 //    glBufferData(GL_ARRAY_BUFFER, sizeof(test_vertices), test_vertices, GL_STATIC_DRAW);
 
@@ -157,6 +155,10 @@ void r_init(void) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     // Enable the Vertex Attribute so that OpenGL knows to use it
     glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 4 * sizeof(GLubyte), (void*)0);
+    glEnableVertexAttribArray(1);
 
     // Bind both the VBO and VAO to 0 so that we don't accidentally modify the VAO and VBO we created
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -237,8 +239,12 @@ static void flush(void) {
   //glDrawArrays(GL_TRIANGLES, 0, 3);
   glBindVertexArray(VAO);
   // Bind the VBO specifying it's a GL_ARRAY_BUFFER
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(VertexData) * buf_idx * 4, vertex_buf, GL_STATIC_DRAW);
+  // vertex
+  glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * buf_idx * 8, vert_buf, GL_STATIC_DRAW);
+  // color
+  glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLubyte) * buf_idx * 16, color_buf, GL_STATIC_DRAW);
   // Bind the EBO specifying it's a GL_ELEMENT_ARRAY_BUFFER
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * buf_idx * 6, index_buf, GL_STATIC_DRAW);
@@ -280,19 +286,6 @@ static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
   vert_buf[texvert_idx + 5] = dst.y + dst.h;
   vert_buf[texvert_idx + 6] = dst.x + dst.w;
   vert_buf[texvert_idx + 7] = dst.y + dst.h;
-
-  auto& buf0 = vertex_buf[element_idx + 0];
-  buf0.m_pos[0] = dst.x;
-  buf0.m_pos[1] = dst.y;
-  auto& buf1 = vertex_buf[element_idx + 1];
-  buf1.m_pos[0] = dst.x + dst.w;
-  buf1.m_pos[1] = dst.y;
-  auto& buf2 = vertex_buf[element_idx + 2];
-  buf2.m_pos[0] = dst.x;
-  buf2.m_pos[1] = dst.y + dst.h;
-  auto& buf3 = vertex_buf[element_idx + 3];
-  buf3.m_pos[0] = dst.x + dst.w;
-  buf3.m_pos[1] = dst.y + dst.h;
 
   /* update color buffer */
   std::memcpy(color_buf + color_idx +  0, &color, 4);
