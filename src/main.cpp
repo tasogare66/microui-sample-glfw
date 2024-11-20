@@ -274,9 +274,39 @@ int main(void)
   ctx->text_height = text_height;
 
   //glClearColor(0.0, 0.0, 0.0, 1.0);
+
+  double prv_xpos = 0.0, prv_ypos = 0.0;
+  uint32_t prv_mousedown = 0, prv_mouseup = 0;
   while (!glfwWindowShouldClose(window))
   {
     glfwPollEvents();
+
+    {
+      double xpos, ypos;
+      glfwGetCursorPos(window, &xpos, &ypos);
+      prv_xpos = xpos;
+      prv_ypos = ypos;
+      uint32_t mousedown = 0, mouseup = 0;
+      constexpr std::pair<int, int> tbl[] = {
+        {GLFW_MOUSE_BUTTON_LEFT, MU_MOUSE_LEFT},
+        {GLFW_MOUSE_BUTTON_MIDDLE, MU_MOUSE_MIDDLE},
+        {GLFW_MOUSE_BUTTON_RIGHT, MU_MOUSE_RIGHT},
+      };
+      for (const auto& p : tbl) {
+        auto b = glfwGetMouseButton(window, p.first);
+        if (b == GLFW_PRESS) {
+          mousedown |= p.second;
+        } else if (b == GLFW_RELEASE) {
+          mouseup |= p.second;
+        }
+      }
+      auto trig_mousedown = ~prv_mousedown & mousedown;
+      auto trig_mouseup = ~prv_mouseup & mouseup;
+      mu_input_mousedown(ctx, xpos, ypos, trig_mousedown);
+      mu_input_mouseup(ctx, xpos, ypos, trig_mouseup);
+      prv_mousedown = mousedown;
+      prv_mouseup = mouseup;
+    }
 
     glClear(GL_COLOR_BUFFER_BIT);
 
