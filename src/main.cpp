@@ -22,6 +22,17 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+static double mouse_wheel = 0.0;
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+  mouse_wheel = yoffset;
+}
+
+static uint32_t character_codepoint = 0;
+static void character_callback(GLFWwindow* window, unsigned int codepoint)
+{
+  character_codepoint = codepoint;
+}
 
 static  char logbuf[64000];
 static   int logbuf_updated = 0;
@@ -261,6 +272,8 @@ int main(void)
   }
 
   glfwSetKeyCallback(window, key_callback);
+  glfwSetCharCallback(window, character_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   glfwMakeContextCurrent(window);
   gladLoadGL(); // gladLoadGL(glfwGetProcAddress) if glad generated without a loader
@@ -282,6 +295,7 @@ int main(void)
     glfwPollEvents();
 
     {
+      // mouse
       double xpos, ypos;
       glfwGetCursorPos(window, &xpos, &ypos);
       prv_xpos = xpos;
@@ -306,6 +320,18 @@ int main(void)
       mu_input_mouseup(ctx, xpos, ypos, trig_mouseup);
       prv_mousedown = mousedown;
       prv_mouseup = mouseup;
+      // wheel
+      if (mouse_wheel != 0.0) {
+        mu_input_scroll(ctx, 0, mouse_wheel * -30);
+      }
+      mouse_wheel = 0.0;
+      // text
+      if (character_codepoint) {
+        char text[16] = {};
+        memcpy(text, &character_codepoint, sizeof(character_codepoint));
+        mu_input_text(ctx, text);
+        character_codepoint = 0;
+      }
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
