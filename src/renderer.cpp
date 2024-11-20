@@ -51,26 +51,6 @@ GLuint test_indices[] =
     5, 4, 1 // Lower right triangle
 };
 
-static const char* vertex_shader_text_ =
-"#version 110\n"
-"uniform mat4 MVP;\n"
-"attribute vec3 vCol;\n"
-"attribute vec2 vPos;\n"
-"varying vec3 color;\n"
-"void main()\n"
-"{\n"
-"    gl_Position = MVP * vec4(vPos, 0.0, 1.0);\n"
-"    color = vCol;\n"
-"}\n";
-
-static const char* fragment_shader_text_ =
-"#version 110\n"
-"varying vec3 color;\n"
-"void main()\n"
-"{\n"
-"    gl_FragColor = vec4(color, 1.0);\n"
-"}\n";
-
 const char* vertex_shader_text = "#version 330 core\n"
 "uniform mat4 MVP;\n"
 "layout (location = 0) in vec2 aPos;\n"
@@ -98,12 +78,6 @@ const char* fragment_shader_text = "#version 330 core\n"
 "}\n\0";
 
 void r_init(void) {
-  /* init SDL window */
-  //window = SDL_CreateWindow(
-  //  NULL, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-  //  width, height, SDL_WINDOW_OPENGL);
-  //SDL_GL_CreateContext(window);
-
   /* init gl */
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -234,7 +208,6 @@ static void flush(void) {
 
   const float ratio = width / (float)height;
   glViewport(0, 0, width, height);
-  glClear(GL_COLOR_BUFFER_BIT);
 
   mat4x4 m, p, mvp;
   mat4x4_identity(m);
@@ -374,5 +347,4 @@ void r_clear(mu_Color clr) {
 
 void r_present(void) {
   flush();
-  //SDL_GL_SwapWindow(window);
 }
