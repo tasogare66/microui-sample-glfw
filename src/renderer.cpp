@@ -14,42 +14,13 @@ static GLubyte color_buf[BUFFER_SIZE * 16];
 static GLuint  index_buf[BUFFER_SIZE *  6];
 
 static GLuint atlas_tex_id;
-static GLuint vertex_buffer, vertex_shader, fragment_shader, program;
-static GLint mvp_location, vpos_location, vcol_location;
+static GLuint vertex_shader, fragment_shader, program;
+static GLint mvp_location;
 static GLuint VAO, VBO[3], EBO;
 
 static int width  = 800;
 static int height = 600;
 static int buf_idx;
-
-
-static const struct
-{
-  float x, y;
-  float r, g, b;
-} vertices[3] = {
-    { -0.6f, -0.4f, 1.f, 0.f, 0.f },
-    {  0.6f, -0.4f, 0.f, 1.f, 0.f },
-    {   0.f,  0.6f, 0.f, 0.f, 1.f }
-};
-
-GLfloat test_vertices[] =
-{
-    -0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower left corner
-    0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower right corner
-    0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // Upper corner
-    -0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner left
-    0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner right
-    0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f // Inner down
-};
-
-// Indices for vertices order
-GLuint test_indices[] =
-{
-    0, 3, 5, // Lower left triangle
-    3, 2, 4, // Upper triangle
-    5, 4, 1 // Lower right triangle
-};
 
 const char* vertex_shader_text = "#version 330 core\n"
 "uniform mat4 MVP;\n"
@@ -84,19 +55,12 @@ void r_init(void) {
   glDisable(GL_CULL_FACE);
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_SCISSOR_TEST);
-  //glEnable(GL_TEXTURE_2D);
-  //glEnableClientState(GL_VERTEX_ARRAY);
-  //glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  //glEnableClientState(GL_COLOR_ARRAY);
   assert(glGetError() == 0);
 
   /* init texture */
   glGenTextures(1, &atlas_tex_id);
   glBindTexture(GL_TEXTURE_2D, atlas_tex_id);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  assert(glGetError() == 0);
-  //glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, ATLAS_WIDTH, ATLAS_HEIGHT, 0,
-  //  GL_ALPHA, GL_UNSIGNED_BYTE, atlas_texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, ATLAS_WIDTH, ATLAS_HEIGHT, 0,
     GL_RED, GL_UNSIGNED_BYTE, atlas_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -105,10 +69,6 @@ void r_init(void) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   assert(glGetError() == 0);
 
-  // buffer
-  glGenBuffers(1, &vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   // buffer
   {
     // Create reference containers for the Vartex Array Object, the Vertex Buffer Object, and the Element Buffer Object
@@ -121,16 +81,12 @@ void r_init(void) {
     // Make the VAO the current Vertex Array Object by binding it
     glBindVertexArray(VAO);
 
+    // Bind the EBO specifying it's a GL_ELEMENT_ARRAY_BUFFER
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
     // Bind the VBO specifying it's a GL_ARRAY_BUFFER
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     // Introduce the vertices into the VBO
-//    glBufferData(GL_ARRAY_BUFFER, sizeof(test_vertices), test_vertices, GL_STATIC_DRAW);
-
-    // Bind the EBO specifying it's a GL_ELEMENT_ARRAY_BUFFER
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    // Introduce the indices into the EBO
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(test_indices), test_indices, GL_STATIC_DRAW);
-
     // Configure the Vertex Attribute so that OpenGL knows how to read the VBO
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     // Enable the Vertex Attribute so that OpenGL knows to use it
@@ -170,16 +126,6 @@ void r_init(void) {
   assert(glGetError() == 0);
 
   mvp_location = glGetUniformLocation(program, "MVP");
-  //vpos_location = glGetAttribLocation(program, "vPos");
-  //vcol_location = glGetAttribLocation(program, "vCol");
-
-  //glEnableVertexAttribArray(vpos_location);
-  //glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-  //  sizeof(vertices[0]), (void*)0);
-
-  //glEnableVertexAttribArray(vcol_location);
-  //glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-  //  sizeof(vertices[0]), (void*)(sizeof(float) * 2));
   assert(glGetError() == 0);
 }
 
@@ -211,14 +157,12 @@ static void flush(void) {
 
   mat4x4 m, p, mvp;
   mat4x4_identity(m);
-  //mat4x4_rotate_Z(m, m, (float)glfwGetTime());
-  //mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
   mat4x4_ortho(p, 0.0f, width, height, 0.f, 1.f, -1.f);
   mat4x4_mul(mvp, p, m);
 
   glUseProgram(program);
   glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
-  //glDrawArrays(GL_TRIANGLES, 0, 3);
+
   glBindTexture(GL_TEXTURE_2D, atlas_tex_id);
   glBindVertexArray(VAO);
   // Bind the VBO specifying it's a GL_ARRAY_BUFFER

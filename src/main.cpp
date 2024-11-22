@@ -140,7 +140,7 @@ static void test_window(mu_Context* ctx) {
       mu_layout_end_column(ctx);
       /* color preview */
       mu_Rect r = mu_layout_next(ctx);
-      mu_draw_rect(ctx, r, mu_color(bg[0], bg[1], bg[2], 255));
+      mu_draw_rect(ctx, r, mu_color(static_cast<int>(bg[0]), static_cast<int>(bg[1]), static_cast<int>(bg[2]), 255));
       char buf[32];
       snprintf(buf, sizeof(buf), "#%02X%02X%02X", (int)bg[0], (int)bg[1], (int)bg[2]);
       mu_draw_control_text(ctx, buf, r, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
@@ -250,8 +250,6 @@ static int text_height(mu_Font font) {
 
 int main(void)
 {
-  GLFWwindow* window;
-
   glfwSetErrorCallback(error_callback);
 
   if (!glfwInit()) {
@@ -264,7 +262,7 @@ int main(void)
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  window = glfwCreateWindow(800, 600, "microui-sample", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(800, 600, "microui-sample", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
@@ -279,14 +277,13 @@ int main(void)
   gladLoadGL(); // gladLoadGL(glfwGetProcAddress) if glad generated without a loader
   glfwSwapInterval(1);
 
+  //glClearColor(0.0, 0.0, 0.0, 1.0);
   r_init();
   /* init microui */
   mu_Context* ctx = reinterpret_cast<mu_Context*>(malloc(sizeof(mu_Context)));
   mu_init(ctx);
   ctx->text_width = text_width;
   ctx->text_height = text_height;
-
-  //glClearColor(0.0, 0.0, 0.0, 1.0);
 
   double prv_xpos = 0.0, prv_ypos = 0.0;
   uint32_t prv_mousedown = 0, prv_mouseup = 0;
@@ -340,7 +337,7 @@ int main(void)
     process_frame(ctx);
 
     /* render */
-    r_clear(mu_color(bg[0], bg[1], bg[2], 255));
+    r_clear(mu_color(static_cast<int>(bg[0]), static_cast<int>(bg[1]), static_cast<int>(bg[2]), 255));
     mu_Command* cmd = NULL;
     while (mu_next_command(ctx, &cmd)) {
       switch (cmd->type) {
