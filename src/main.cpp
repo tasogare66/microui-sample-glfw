@@ -9,6 +9,7 @@
 extern "C" {
 #include "microui.h"
 }
+#include "microuipp.h"
 #include "renderer.h"
 
 static void error_callback(int error, const char* description)

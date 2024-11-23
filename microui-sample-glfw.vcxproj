@@ -150,6 +150,7 @@
     <ClCompile Include="externals\glad\src\glad.c" />
     <ClCompile Include="externals\microui\src\microui.c" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\microuipp.cpp" />
     <ClCompile Include="src\renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
