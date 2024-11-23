@@ -190,8 +190,8 @@ static int uint8_slider(mu_Context* ctx, unsigned char* value, int low, int high
   static float tmp;
   mu_push_id(ctx, &value, sizeof(value));
   tmp = *value;
-  int res = mu_slider_ex(ctx, &tmp, low, high, 0, "%.0f", MU_OPT_ALIGNCENTER);
-  *value = tmp;
+  int res = mu_slider_ex(ctx, &tmp, static_cast<mu_Real>(low), static_cast<mu_Real>(high), 0, "%.0f", MU_OPT_ALIGNCENTER);
+  *value = static_cast<uint8_t>(tmp);
   mu_pop_id(ctx);
   return res;
 }
@@ -216,7 +216,7 @@ static void style_window(mu_Context* ctx) {
   };
 
   if (mu_begin_window(ctx, "Style Editor", mu_rect(350, 250, 300, 240))) {
-    int sw = mu_get_current_container(ctx)->body.w * 0.14;
+    int sw = static_cast<int>(mu_get_current_container(ctx)->body.w * 0.14);
     //mu_layout_row(ctx, 6, (int[]) { 80, sw, sw, sw, sw, -1 }, 0);
     const int widths[] = { 80, sw, sw, sw, sw, -1 };
     mu_layout_row(ctx, 6, widths, 0);
@@ -315,13 +315,13 @@ int main(void)
       }
       auto trig_mousedown = ~prv_mousedown & mousedown;
       auto trig_mouseup = ~prv_mouseup & mouseup;
-      mu_input_mousedown(ctx, xpos, ypos, trig_mousedown);
-      mu_input_mouseup(ctx, xpos, ypos, trig_mouseup);
+      mu_input_mousedown(ctx, static_cast<int>(xpos), static_cast<int>(ypos), trig_mousedown);
+      mu_input_mouseup(ctx, static_cast<int>(xpos), static_cast<int>(ypos), trig_mouseup);
       prv_mousedown = mousedown;
       prv_mouseup = mouseup;
       // wheel
       if (mouse_wheel != 0.0) {
-        mu_input_scroll(ctx, 0, mouse_wheel * -30);
+        mu_input_scroll(ctx, 0, static_cast<int>(mouse_wheel * -30));
       }
       mouse_wheel = 0.0;
       // text

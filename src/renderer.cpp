@@ -133,31 +133,12 @@ void r_init(void) {
 static void flush(void) {
   if (buf_idx == 0) { return; }
 
-  //glViewport(0, 0, width, height);
-  //glMatrixMode(GL_PROJECTION);
-  //glPushMatrix();
-  //glLoadIdentity();
-  //glOrtho(0.0f, width, height, 0.0f, -1.0f, +1.0f);
-  //glMatrixMode(GL_MODELVIEW);
-  //glPushMatrix();
-  //glLoadIdentity();
-
-  //glTexCoordPointer(2, GL_FLOAT, 0, tex_buf);
-  //glVertexPointer(2, GL_FLOAT, 0, vert_buf);
-  //glColorPointer(4, GL_UNSIGNED_BYTE, 0, color_buf);
-  //glDrawElements(GL_TRIANGLES, buf_idx * 6, GL_UNSIGNED_INT, index_buf);
-
-  //glMatrixMode(GL_MODELVIEW);
-  //glPopMatrix();
-  //glMatrixMode(GL_PROJECTION);
-  //glPopMatrix();
-
   const float ratio = width / (float)height;
   glViewport(0, 0, width, height);
 
   mat4x4 m, p, mvp;
   mat4x4_identity(m);
-  mat4x4_ortho(p, 0.0f, width, height, 0.f, 1.f, -1.f);
+  mat4x4_ortho(p, 0.0f, static_cast<float>(width), static_cast<float>(height), 0.f, 1.f, -1.f);
   mat4x4_mul(mvp, p, m);
 
   glUseProgram(program);
@@ -208,14 +189,14 @@ static void push_quad(mu_Rect dst, mu_Rect src, mu_Color color) {
   tex_buf[texvert_idx + 7] = y + h;
 
   /* update vertex buffer */
-  vert_buf[texvert_idx + 0] = dst.x;
-  vert_buf[texvert_idx + 1] = dst.y;
-  vert_buf[texvert_idx + 2] = dst.x + dst.w;
-  vert_buf[texvert_idx + 3] = dst.y;
-  vert_buf[texvert_idx + 4] = dst.x;
-  vert_buf[texvert_idx + 5] = dst.y + dst.h;
-  vert_buf[texvert_idx + 6] = dst.x + dst.w;
-  vert_buf[texvert_idx + 7] = dst.y + dst.h;
+  vert_buf[texvert_idx + 0] = static_cast<GLfloat>(dst.x);
+  vert_buf[texvert_idx + 1] = static_cast<GLfloat>(dst.y);
+  vert_buf[texvert_idx + 2] = static_cast<GLfloat>(dst.x + dst.w);
+  vert_buf[texvert_idx + 3] = static_cast<GLfloat>(dst.y);
+  vert_buf[texvert_idx + 4] = static_cast<GLfloat>(dst.x);
+  vert_buf[texvert_idx + 5] = static_cast<GLfloat>(dst.y + dst.h);
+  vert_buf[texvert_idx + 6] = static_cast<GLfloat>(dst.x + dst.w);
+  vert_buf[texvert_idx + 7] = static_cast<GLfloat>(dst.y + dst.h);
 
   /* update color buffer */
   std::memcpy(color_buf + color_idx +  0, &color, 4);
@@ -284,7 +265,7 @@ void r_set_clip_rect(mu_Rect rect) {
 
 void r_clear(mu_Color clr) {
   flush();
-  glClearColor(clr.r / 255., clr.g / 255., clr.b / 255., clr.a / 255.);
+  glClearColor(static_cast<GLfloat>(clr.r / 255.), static_cast<GLfloat>(clr.g / 255.), static_cast<GLfloat>(clr.b / 255.), static_cast<GLfloat>(clr.a / 255.));
   glClear(GL_COLOR_BUFFER_BIT);
 }
 
