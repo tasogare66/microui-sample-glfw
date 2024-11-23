@@ -18,8 +18,9 @@ static void error_callback(int error, const char* description)
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
+  }
 }
 
 static double mouse_wheel = 0.0;
@@ -287,6 +288,7 @@ int main(void)
 
   double prv_xpos = 0.0, prv_ypos = 0.0;
   uint32_t prv_mousedown = 0, prv_mouseup = 0;
+  uint32_t prv_keydown = 0, prv_keyup = 0;
   while (!glfwWindowShouldClose(window))
   {
     glfwPollEvents();
@@ -328,6 +330,31 @@ int main(void)
         memcpy(text, &character_codepoint, sizeof(character_codepoint));
         mu_input_text(ctx, text);
         character_codepoint = 0;
+      }
+      // key
+      {
+        uint32_t keydown = 0, keyup = 0;
+        constexpr std::pair<int, int> keytbl[] = {
+          {GLFW_KEY_LEFT_SHIFT, MU_KEY_SHIFT},
+          {GLFW_KEY_RIGHT_SHIFT, MU_KEY_SHIFT},
+          {GLFW_KEY_LEFT_CONTROL, MU_KEY_CTRL},
+          {GLFW_KEY_RIGHT_CONTROL, MU_KEY_CTRL},
+          {GLFW_KEY_LEFT_ALT, MU_KEY_ALT},
+          {GLFW_KEY_RIGHT_ALT, MU_KEY_ALT},
+          {GLFW_KEY_ENTER, MU_KEY_RETURN},
+          {GLFW_KEY_BACKSPACE, MU_KEY_BACKSPACE},
+        };
+        for (const auto& p : keytbl) {
+          int state = glfwGetKey(window, p.first);
+          if (state == GLFW_PRESS) { keydown |= p.second; }
+          else if (state == GLFW_RELEASE) { keyup |= p.second; }
+        }
+        auto trig_keydown = ~prv_keydown & keydown;
+        auto trig_keyup = ~prv_keyup & keyup;
+        mu_input_keydown(ctx, trig_keydown);
+        mu_input_keyup(ctx, trig_keyup);
+        prv_keydown = keydown;
+        prv_keyup = keyup;
       }
     }
 
