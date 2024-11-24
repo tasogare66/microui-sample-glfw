@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
+#include "microuipp.h"
 extern "C" {
 #include "microui.h"
 }
-#include "microuipp.h"
 #include "renderer.h"
 
 static void error_callback(int error, const char* description)
