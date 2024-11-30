@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdint>
 namespace mui{
 #define MU_COMMANDLIST_SIZE     (256 * 1024)
@@ -26,6 +27,15 @@ namespace mui{
   struct Stack {
     int32_t idx = 0;
     std::array<T, _Size> items = {};
+    void push(const T& val) {
+      assert(idx < _Size);
+      items[idx] = val;
+      ++idx;
+    }
+    void pop() {
+      assert(idx > 0);
+      --idx;
+    }
   };
 
   enum {
@@ -151,19 +161,19 @@ namespace mui{
     mu_IconCommand icon;
   };
 
-  typedef struct {
+  struct Layout {
     Rect body;
     Rect next;
     Vec2 position;
     Vec2 size;
     Vec2 max;
-    int widths[MU_MAX_WIDTHS];
-    int items;
-    int item_index;
-    int next_row;
-    int next_type;
-    int indent;
-  } mu_Layout;
+    int32_t widths[MU_MAX_WIDTHS];
+    int32_t items;
+    int32_t item_index;
+    int32_t next_row;
+    int32_t next_type;
+    int32_t indent;
+  };
 
   struct Container {
     Command* head, * tail;
@@ -213,7 +223,7 @@ namespace mui{
     Stack<Container*, MU_CONTAINERSTACK_SIZE> container_stack;
     Stack<Rect, MU_CLIPSTACK_SIZE> clip_stack;
     Stack<muId, MU_IDSTACK_SIZE> id_stack;
-    Stack<mu_Layout, MU_LAYOUTSTACK_SIZE> layout_stack;
+    Stack<Layout, MU_LAYOUTSTACK_SIZE> layout_stack;
     /* retained state pools */
     PoolItem container_pool[MU_CONTAINERPOOL_SIZE];
     Container containers[MU_CONTAINERPOOL_SIZE];
@@ -238,43 +248,43 @@ namespace mui{
   void begin(Context* ctx);
   void end(Context* ctx);
   void set_focus(Context* ctx, muId id);
-  muId get_id(Context* ctx, const void* data, int size);
-  void push_id(Context* ctx, const void* data, int size);
+  muId get_id(Context* ctx, const void* data, int32_t size);
+  void push_id(Context* ctx, const void* data, int32_t size);
   void pop_id(Context* ctx);
   void push_clip_rect(Context* ctx, Rect rect);
   void pop_clip_rect(Context* ctx);
   Rect get_clip_rect(Context* ctx);
-  int check_clip(Context* ctx, Rect r);
+  int32_t check_clip(Context* ctx, Rect r);
   Container* get_current_container(Context* ctx);
   Container* get_container(Context* ctx, const char* name);
   void bring_to_front(Context* ctx, Container* cnt);
 
-  int pool_init(Context* ctx, PoolItem* items, int len, muId id);
-  int pool_get(Context* ctx, PoolItem* items, int len, muId id);
-  void pool_update(Context* ctx, PoolItem* items, int idx);
+  int32_t pool_init(Context* ctx, PoolItem* items, int32_t len, muId id);
+  int32_t pool_get(Context* ctx, PoolItem* items, int32_t len, muId id);
+  void pool_update(Context* ctx, PoolItem* items, int32_t idx);
 
-  void input_mousemove(Context* ctx, int x, int y);
-  void input_mousedown(Context* ctx, int x, int y, int btn);
-  void input_mouseup(Context* ctx, int x, int y, int btn);
-  void input_scroll(Context* ctx, int x, int y);
-  void input_keydown(Context* ctx, int key);
-  void input_keyup(Context* ctx, int key);
+  void input_mousemove(Context* ctx, int32_t x, int32_t y);
+  void input_mousedown(Context* ctx, int32_t x, int32_t y, int32_t btn);
+  void input_mouseup(Context* ctx, int32_t x, int32_t y, int32_t btn);
+  void input_scroll(Context* ctx, int32_t x, int32_t y);
+  void input_keydown(Context* ctx, int32_t key);
+  void input_keyup(Context* ctx, int32_t key);
   void input_text(Context* ctx, const char* text);
 
-  Command* push_command(Context* ctx, int type, int size);
-  int next_command(Context* ctx, Command** cmd);
+  Command* push_command(Context* ctx, int32_t type, int32_t size);
+  int32_t next_command(Context* ctx, Command** cmd);
   void set_clip(Context* ctx, Rect rect);
   void draw_rect(Context* ctx, Rect rect, Color color);
   void draw_box(Context* ctx, Rect rect, Color color);
-  void draw_text(Context* ctx, mu_Font font, const char* str, int len, Vec2 pos, Color color);
-  void draw_icon(Context* ctx, int id, Rect rect, Color color);
+  void draw_text(Context* ctx, mu_Font font, const char* str, int32_t len, Vec2 pos, Color color);
+  void draw_icon(Context* ctx, int32_t id, Rect rect, Color color);
 
   void layout_row(Context* ctx, int items, const int* widths, int height);
-  void layout_width(Context* ctx, int width);
-  void layout_height(Context* ctx, int height);
+  void layout_width(Context* ctx, int32_t width);
+  void layout_height(Context* ctx, int32_t height);
   void layout_begin_column(Context* ctx);
   void layout_end_column(Context* ctx);
-  void layout_set_next(Context* ctx, Rect r, int relative);
+  void layout_set_next(Context* ctx, Rect r, int32_t relative);
   Rect layout_next(Context* ctx);
 
   void draw_control_frame(Context* ctx, muId id, Rect rect, int colorid, int opt);
@@ -282,31 +292,31 @@ namespace mui{
   int mouse_over(Context* ctx, Rect rect);
   void update_control(Context* ctx, muId id, Rect rect, int opt);
 
-#define mu_button(ctx, label)             mu_button_ex(ctx, label, 0, MU_OPT_ALIGNCENTER)
-#define mu_textbox(ctx, buf, bufsz)       mu_textbox_ex(ctx, buf, bufsz, 0)
-#define mu_slider(ctx, value, lo, hi)     mu_slider_ex(ctx, value, lo, hi, 0, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER)
-#define mu_number(ctx, value, step)       mu_number_ex(ctx, value, step, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER)
-#define mu_header(ctx, label)             mu_header_ex(ctx, label, 0)
-#define mu_begin_treenode(ctx, label)     mu_begin_treenode_ex(ctx, label, 0)
-#define mu_begin_window(ctx, title, rect) mu_begin_window_ex(ctx, title, rect, 0)
-#define mu_begin_panel(ctx, name)         mu_begin_panel_ex(ctx, name, 0)
+//#define mu_button(ctx, label)             mu_button_ex(ctx, label, 0, MU_OPT_ALIGNCENTER)
+//#define mu_textbox(ctx, buf, bufsz)       mu_textbox_ex(ctx, buf, bufsz, 0)
+//#define mu_slider(ctx, value, lo, hi)     mu_slider_ex(ctx, value, lo, hi, 0, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER)
+//#define mu_number(ctx, value, step)       mu_number_ex(ctx, value, step, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER)
+//#define mu_header(ctx, label)             mu_header_ex(ctx, label, 0)
+//#define mu_begin_treenode(ctx, label)     mu_begin_treenode_ex(ctx, label, 0)
+//#define mu_begin_window(ctx, title, rect) mu_begin_window_ex(ctx, title, rect, 0)
+//#define mu_begin_panel(ctx, name)         mu_begin_panel_ex(ctx, name, 0)
 
   void text(Context* ctx, const char* text);
   void label(Context* ctx, const char* text);
-  int button_ex(Context* ctx, const char* label, int icon, int opt);
+  int button(Context* ctx, const char* label, int icon = 0, int opt = MU_OPT_ALIGNCENTER);
   int checkbox(Context* ctx, const char* label, int* state);
   int textbox_raw(Context* ctx, char* buf, int bufsz, muId id, Rect r, int opt);
-  int textbox_ex(Context* ctx, char* buf, int bufsz, int opt);
-  int slider_ex(Context* ctx, muReal* value, muReal low, muReal high, muReal step, const char* fmt, int opt);
-  int number_ex(Context* ctx, muReal* value, muReal step, const char* fmt, int opt);
-  int header_ex(Context* ctx, const char* label, int opt);
-  int begin_treenode_ex(Context* ctx, const char* label, int opt);
+  int textbox(Context* ctx, char* buf, int bufsz, int opt = 0);
+  int slider(Context* ctx, muReal* value, muReal low, muReal high, muReal step = 0, const char* fmt = MU_SLIDER_FMT, int opt = MU_OPT_ALIGNCENTER);
+  int number(Context* ctx, muReal* value, muReal step, const char* fmt = MU_SLIDER_FMT, int opt = MU_OPT_ALIGNCENTER);
+  int header(Context* ctx, const char* label, int opt = 0);
+  int begin_treenode(Context* ctx, const char* label, int opt = 0);
   void end_treenode(Context* ctx);
-  int begin_window_ex(Context* ctx, const char* title, Rect rect, int opt);
+  int begin_window(Context* ctx, const char* title, Rect rect, int opt = 0);
   void end_window(Context* ctx);
   void open_popup(Context* ctx, const char* name);
   int begin_popup(Context* ctx, const char* name);
   void end_popup(Context* ctx);
-  void begin_panel_ex(Context* ctx, const char* name, int opt);
+  void begin_panel(Context* ctx, const char* name, int opt = 0);
   void end_panel(Context* ctx);
 }
