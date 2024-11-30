@@ -7,9 +7,6 @@
 #include <stdio.h>
 #include <string>
 #include "microuipp.h"
-//extern "C" {
-//#include "microui.h"
-//}
 #include "renderer.h"
 
 static void error_callback(int error, const char* description)
@@ -51,8 +48,8 @@ static void test_window(mui::Context* ctx) {
   /* do window */
   if (mui::begin_window(ctx, "Demo Window", mui::Rect(40, 40, 300, 450))) {
     mui::Container* win = mui::get_current_container(ctx);
-    win->rect.w = mu_max(win->rect.w, 240);
-    win->rect.h = mu_max(win->rect.h, 300);
+    win->rect.w = std::max(win->rect.w, 240);
+    win->rect.h = std::max(win->rect.h, 300);
 
     /* window info */
     if (mui::header(ctx, "Window Info")) {
@@ -241,12 +238,12 @@ void process_frame(mui::Context* ctx) {
   mui::end(ctx);
 }
 
-static int text_width(mui::mu_Font font, const char* text, int len) {
+static int text_width(mui::muFont font, const char* text, int len) {
   if (len == -1) { len = static_cast<int>(strlen(text)); }
   return r_get_text_width(text, len);
 }
 
-static int text_height(mui::mu_Font font) {
+static int text_height(mui::muFont font) {
   return r_get_text_height();
 }
 

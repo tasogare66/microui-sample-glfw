@@ -223,7 +223,7 @@ void r_draw_text(const char *text, mui::Vec2 pos, mui::Color color) {
   mui::Rect dst = { pos.x, pos.y, 0, 0 };
   for (const char *p = text; *p; p++) {
     if ((*p & 0xc0) == 0x80) { continue; }
-    int chr = mu_min((unsigned char) *p, 127);
+    int chr = std::min<uint8_t>((unsigned char) *p, 127);
     mui::Rect src = atlas[ATLAS_FONT + chr];
     dst.w = src.w;
     dst.h = src.h;
@@ -245,7 +245,7 @@ int r_get_text_width(const char *text, int len) {
   int res = 0;
   for (const char *p = text; *p && len--; p++) {
     if ((*p & 0xc0) == 0x80) { continue; }
-    int chr = mu_min((unsigned char) *p, 127);
+    int chr = std::min<uint8_t>((unsigned char) *p, 127);
     res += atlas[ATLAS_FONT + chr].w;
   }
   return res;

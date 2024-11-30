@@ -112,10 +112,10 @@ void end(Context* ctx) {
     ** otherwise set the previous container's tail to jump to this one */
     if (i == 0) {
       Command* cmd = (Command*)ctx->command_list.items.data();
-      cmd->jump.dst = (char*)cnt->head + sizeof(mu_JumpCommand);
+      cmd->jump.dst = (char*)cnt->head + sizeof(JumpCommand);
     } else {
       Container* prev = ctx->root_list.items[i - 1];
-      prev->tail->jump.dst = (char*)cnt->head + sizeof(mu_JumpCommand);
+      prev->tail->jump.dst = (char*)cnt->head + sizeof(JumpCommand);
     }
     /* make the last container's tail jump to the end of command list */
     if (i == n - 1) {
@@ -139,7 +139,7 @@ static void hash(muId* hash, const void* data, size_t size) {
   }
 }
 
-muId get_id(Context* ctx, const void* data, int32_t size) {
+muId get_id(Context* ctx, const void* data, size_t size) {
   const auto idx = ctx->id_stack.idx;
   muId res = (idx > 0) ? ctx->id_stack.items[idx - 1] : HASH_INITIAL;
   hash(&res, data, size);
@@ -147,7 +147,7 @@ muId get_id(Context* ctx, const void* data, int32_t size) {
   return res;
 }
 
-void push_id(Context* ctx, const void* data, int32_t size) {
+void push_id(Context* ctx, const void* data, size_t size) {
   ctx->id_stack.push(get_id(ctx, data, size));
 }
 
@@ -306,8 +306,8 @@ void input_keyup(Context* ctx, int32_t key) {
 }
 
 void input_text(Context* ctx, const char* text) {
-  int len = strlen(ctx->input_text);
-  int size = strlen(text) + 1;
+  size_t len = strlen(ctx->input_text);
+  size_t size = strlen(text) + 1;
   assert(len + size <= (int)sizeof(ctx->input_text));
   memcpy(ctx->input_text + len, text, size);
 }
@@ -340,14 +340,14 @@ int32_t next_command(Context* ctx, Command** cmd) {
 
 static Command* push_jump(Context* ctx, Command* dst) {
   Command* cmd;
-  cmd = push_command(ctx, MU_COMMAND_JUMP, sizeof(mu_JumpCommand));
+  cmd = push_command(ctx, MU_COMMAND_JUMP, sizeof(JumpCommand));
   cmd->jump.dst = dst;
   return cmd;
 }
 
 void set_clip(Context* ctx, Rect rect) {
   Command* cmd;
-  cmd = push_command(ctx, MU_COMMAND_CLIP, sizeof(mu_ClipCommand));
+  cmd = push_command(ctx, MU_COMMAND_CLIP, sizeof(ClipCommand));
   cmd->clip.rect = rect;
 }
 
@@ -355,7 +355,7 @@ void draw_rect(Context* ctx, Rect rect, Color color) {
   Command* cmd;
   rect = rect.insert(get_clip_rect(ctx));
   if (rect.w > 0 && rect.h > 0) {
-    cmd = push_command(ctx, MU_COMMAND_RECT, sizeof(mu_RectCommand));
+    cmd = push_command(ctx, MU_COMMAND_RECT, sizeof(RectCommand));
     cmd->rect.rect = rect;
     cmd->rect.color = color;
   }
@@ -368,7 +368,7 @@ void draw_box(Context* ctx, Rect rect, Color color) {
   draw_rect(ctx, Rect(rect.x + rect.w - 1, rect.y, 1, rect.h), color);
 }
 
-void draw_text(Context* ctx, mu_Font font, const char* str, int32_t len, Vec2 pos, Color color)
+void draw_text(Context* ctx, muFont font, const char* str, int32_t len, Vec2 pos, Color color)
 {
   Command* cmd;
   Rect rect = Rect(
@@ -377,8 +377,8 @@ void draw_text(Context* ctx, mu_Font font, const char* str, int32_t len, Vec2 po
   if (clipped == MU_CLIP_ALL) { return; }
   if (clipped == MU_CLIP_PART) { set_clip(ctx, get_clip_rect(ctx)); }
   /* add command */
-  if (len < 0) { len = strlen(str); }
-  cmd = push_command(ctx, MU_COMMAND_TEXT, sizeof(mu_TextCommand) + len);
+  if (len < 0) { len = static_cast<int32_t>(strlen(str)); }
+  cmd = push_command(ctx, MU_COMMAND_TEXT, sizeof(TextCommand) + len);
   memcpy(cmd->text.str, str, len);
   cmd->text.str[len] = '\0';
   cmd->text.pos = pos;
@@ -395,7 +395,7 @@ void draw_icon(Context* ctx, int32_t id, Rect rect, Color color) {
   if (clipped == MU_CLIP_ALL) { return; }
   if (clipped == MU_CLIP_PART) { set_clip(ctx, get_clip_rect(ctx)); }
   /* do icon command */
-  cmd = push_command(ctx, MU_COMMAND_ICON, sizeof(mu_IconCommand));
+  cmd = push_command(ctx, MU_COMMAND_ICON, sizeof(IconCommand));
   cmd->icon.id = id;
   cmd->icon.rect = rect;
   cmd->icon.color = color;
@@ -485,15 +485,15 @@ Rect layout_next(Context* ctx) {
 
   /* update position */
   layout->position.x += res.w + style->spacing;
-  layout->next_row = mu_max(layout->next_row, res.y + res.h + style->spacing);
+  layout->next_row = std::max(layout->next_row, res.y + res.h + style->spacing);
 
   /* apply body offset */
   res.x += layout->body.x;
   res.y += layout->body.y;
 
   /* update max position */
-  layout->max.x = mu_max(layout->max.x, res.x + res.w);
-  layout->max.y = mu_max(layout->max.y, res.y + res.h);
+  layout->max.x = std::max(layout->max.x, res.x + res.w);
+  layout->max.y = std::max(layout->max.y, res.y + res.h);
 
   return (ctx->last_rect = res);
 }
@@ -523,7 +523,7 @@ void draw_control_frame(Context* ctx, muId id, Rect rect, int colorid, int opt)
 void draw_control_text(Context* ctx, const char* str, Rect rect, int colorid, int opt)
 {
   Vec2 pos;
-  mu_Font font = ctx->style->font;
+  muFont font = ctx->style->font;
   int tw = ctx->text_width(font, str, -1);
   push_clip_rect(ctx, rect);
   pos.y = rect.y + (rect.h - ctx->text_height(font)) / 2;
@@ -568,7 +568,7 @@ void update_control(Context* ctx, muId id, Rect rect, int opt) {
 void text(Context* ctx, const char* text) {
   const char* start, * end, * p = text;
   int width = -1;
-  mu_Font font = ctx->style->font;
+  muFont font = ctx->style->font;
   Color color = ctx->style->colors[MU_COLOR_TEXT];
   layout_begin_column(ctx);
   layout_row(ctx, 1, &width, ctx->text_height(font));
@@ -639,8 +639,8 @@ int textbox_raw(Context* ctx, char* buf, int bufsz, muId id, Rect r, int opt)
 
   if (ctx->focus == id) {
     /* handle text input */
-    int len = strlen(buf);
-    int n = mu_min(bufsz - len - 1, (int)strlen(ctx->input_text));
+    size_t len = strlen(buf);
+    size_t n = std::min(bufsz - len - 1, strlen(ctx->input_text));
     if (n > 0) {
       memcpy(buf + len, ctx->input_text, n);
       len += n;
@@ -665,11 +665,11 @@ int textbox_raw(Context* ctx, char* buf, int bufsz, muId id, Rect r, int opt)
   draw_control_frame(ctx, id, r, MU_COLOR_BASE, opt);
   if (ctx->focus == id) {
     Color color = ctx->style->colors[MU_COLOR_TEXT];
-    mu_Font font = ctx->style->font;
+    muFont font = ctx->style->font;
     int textw = ctx->text_width(font, buf, -1);
     int texth = ctx->text_height(font);
     int ofx = r.w - ctx->style->padding - textw - 1;
-    int textx = r.x + mu_min(ofx, ctx->style->padding);
+    int textx = r.x + std::min(ofx, ctx->style->padding);
     int texty = r.y + (r.h - texth) / 2;
     push_clip_rect(ctx, r);
     draw_text(ctx, font, buf, -1, Vec2(textx, texty), color);
@@ -733,7 +733,7 @@ int slider(Context* ctx, muReal* value, muReal low, muReal high,
     if (step) { v = ((long long)((v + step / 2) / step)) * step; }
   }
   /* clamp and store value, update res */
-  *value = v = mu_clamp(v, low, high);
+  *value = v = std::clamp(v, low, high);
   if (last != v) { res |= MU_RES_CHANGE; }
 
   /* draw base */
@@ -860,7 +860,7 @@ void end_treenode(Context* ctx) {
         cnt->scroll.y += ctx->mouse_delta.y * cs.y / base.h;                \
       }                                                                     \
       /* clamp scroll to limits */                                          \
-      cnt->scroll.y = mu_clamp(cnt->scroll.y, 0, maxscroll);                \
+      cnt->scroll.y = std::clamp(cnt->scroll.y, 0, maxscroll);                \
                                                                             \
       /* draw base and thumb */                                             \
       ctx->draw_frame(ctx, base, MU_COLOR_SCROLLBASE);                      \
@@ -989,8 +989,8 @@ int begin_window(Context* ctx, const char* title, Rect rect, int opt) {
     Rect r = Rect(rect.x + rect.w - sz, rect.y + rect.h - sz, sz, sz);
     update_control(ctx, id, r, opt);
     if (id == ctx->focus && ctx->mouse_down == MU_MOUSE_LEFT) {
-      cnt->rect.w = mu_max(96, cnt->rect.w + ctx->mouse_delta.x);
-      cnt->rect.h = mu_max(64, cnt->rect.h + ctx->mouse_delta.y);
+      cnt->rect.w = std::max(96, cnt->rect.w + ctx->mouse_delta.x);
+      cnt->rect.h = std::max(64, cnt->rect.h + ctx->mouse_delta.y);
     }
   }
 

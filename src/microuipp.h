@@ -18,10 +18,10 @@ namespace mui{
 #define MU_SLIDER_FMT           "%.2f"
 #define MU_MAX_FMT              127
 
-#define mu_stack(T, n)          struct { int idx; T items[n]; }
-#define mu_min(a, b)            ((a) < (b) ? (a) : (b))
-#define mu_max(a, b)            ((a) > (b) ? (a) : (b))
-#define mu_clamp(x, a, b)       mu_min(b, mu_max(a, x))
+//#define mu_stack(T, n)          struct { int idx; T items[n]; }
+//#define mu_min(a, b)            ((a) < (b) ? (a) : (b))
+//#define mu_max(a, b)            ((a) > (b) ? (a) : (b))
+//#define mu_clamp(x, a, b)       mu_min(b, mu_max(a, x))
 
   template<class T, size_t _Size>
   struct Stack {
@@ -116,7 +116,7 @@ namespace mui{
 
   using muId = uint32_t;
   using muReal = float;
-  typedef void* mu_Font;
+  using muFont = void*;
 
   struct Vec2 {
     constexpr Vec2(int32_t ix, int32_t iy) : x(ix), y(iy) {}
@@ -144,21 +144,21 @@ namespace mui{
   };
   struct PoolItem { muId id; int last_update; };
 
-  typedef struct { int type, size; } mu_BaseCommand;
-  typedef struct { mu_BaseCommand base; void* dst; } mu_JumpCommand;
-  typedef struct { mu_BaseCommand base; Rect rect; } mu_ClipCommand;
-  typedef struct { mu_BaseCommand base; Rect rect; Color color; } mu_RectCommand;
-  typedef struct { mu_BaseCommand base; mu_Font font; Vec2 pos; Color color; char str[1]; } mu_TextCommand;
-  typedef struct { mu_BaseCommand base; Rect rect; int id; Color color; } mu_IconCommand;
+  struct BaseCommand { int type, size; };
+  struct JumpCommand { BaseCommand base; void* dst; };
+  struct ClipCommand { BaseCommand base; Rect rect; };
+  struct RectCommand { BaseCommand base; Rect rect; Color color; };
+  struct TextCommand { BaseCommand base; muFont font; Vec2 pos; Color color; char str[1]; };
+  struct IconCommand { BaseCommand base; Rect rect; int id; Color color; };
 
   union Command {
     int type;
-    mu_BaseCommand base;
-    mu_JumpCommand jump;
-    mu_ClipCommand clip;
-    mu_RectCommand rect;
-    mu_TextCommand text;
-    mu_IconCommand icon;
+    BaseCommand base;
+    JumpCommand jump;
+    ClipCommand clip;
+    RectCommand rect;
+    TextCommand text;
+    IconCommand icon;
   };
 
   struct Layout {
@@ -186,7 +186,7 @@ namespace mui{
   };
 
   struct Style {
-    mu_Font font;
+    muFont font;
     Vec2 size;
     int padding;
     int spacing;
@@ -199,8 +199,8 @@ namespace mui{
 
   struct Context {
     /* callbacks */
-    int (*text_width)(mu_Font font, const char* str, int len);
-    int (*text_height)(mu_Font font);
+    int (*text_width)(muFont font, const char* str, int len);
+    int (*text_height)(muFont font);
     void (*draw_frame)(Context* ctx, Rect rect, int colorid);
     /* core state */
     Style _style;
@@ -240,16 +240,12 @@ namespace mui{
     char input_text[32];
   };
 
-  //Vec2 mu_vec2(int x, int y);
-  //Rect mu_rect(int x, int y, int w, int h);
-  //Color mu_color(int r, int g, int b, int a);
-
   void init(Context* ctx);
   void begin(Context* ctx);
   void end(Context* ctx);
   void set_focus(Context* ctx, muId id);
-  muId get_id(Context* ctx, const void* data, int32_t size);
-  void push_id(Context* ctx, const void* data, int32_t size);
+  muId get_id(Context* ctx, const void* data, size_t size);
+  void push_id(Context* ctx, const void* data, size_t size);
   void pop_id(Context* ctx);
   void push_clip_rect(Context* ctx, Rect rect);
   void pop_clip_rect(Context* ctx);
@@ -276,7 +272,7 @@ namespace mui{
   void set_clip(Context* ctx, Rect rect);
   void draw_rect(Context* ctx, Rect rect, Color color);
   void draw_box(Context* ctx, Rect rect, Color color);
-  void draw_text(Context* ctx, mu_Font font, const char* str, int32_t len, Vec2 pos, Color color);
+  void draw_text(Context* ctx, muFont font, const char* str, int len, Vec2 pos, Color color);
   void draw_icon(Context* ctx, int32_t id, Rect rect, Color color);
 
   void layout_row(Context* ctx, int items, const int* widths, int height);
@@ -291,15 +287,6 @@ namespace mui{
   void draw_control_text(Context* ctx, const char* str, Rect rect, int colorid, int opt);
   int mouse_over(Context* ctx, Rect rect);
   void update_control(Context* ctx, muId id, Rect rect, int opt);
-
-//#define mu_button(ctx, label)             mu_button_ex(ctx, label, 0, MU_OPT_ALIGNCENTER)
-//#define mu_textbox(ctx, buf, bufsz)       mu_textbox_ex(ctx, buf, bufsz, 0)
-//#define mu_slider(ctx, value, lo, hi)     mu_slider_ex(ctx, value, lo, hi, 0, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER)
-//#define mu_number(ctx, value, step)       mu_number_ex(ctx, value, step, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER)
-//#define mu_header(ctx, label)             mu_header_ex(ctx, label, 0)
-//#define mu_begin_treenode(ctx, label)     mu_begin_treenode_ex(ctx, label, 0)
-//#define mu_begin_window(ctx, title, rect) mu_begin_window_ex(ctx, title, rect, 0)
-//#define mu_begin_panel(ctx, name)         mu_begin_panel_ex(ctx, name, 0)
 
   void text(Context* ctx, const char* text);
   void label(Context* ctx, const char* text);
