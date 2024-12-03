@@ -230,11 +230,29 @@ static void style_window(mui::Context* ctx) {
   }
 }
 
+void my_mui_window(mui::Context* ctx) {
+  // 0
+  if (mui::begin_window(ctx, "My Mui Window 0", mui::Rect(100, 100, 200, 100))) {
+
+    mui::end_window(ctx);
+  }
+  // 1
+  if (mui::begin_window(ctx, "My Mui Window 1", mui::Rect(120, 120, 200, 100))) {
+
+    mui::end_window(ctx);
+  }
+}
+
 void process_frame(mui::Context* ctx) {
+#if 01
   mui::begin(ctx);
   style_window(ctx);
   log_window(ctx);
   test_window(ctx);
+#endif
+#if 0
+  my_mui_window(ctx);
+#endif
   mui::end(ctx);
 }
 
@@ -366,10 +384,10 @@ int main(void)
     mui::Command* cmd = NULL;
     while (mui::next_command(ctx, &cmd)) {
       switch (cmd->type) {
-      case mui::MU_COMMAND_TEXT: r_draw_text(cmd->text.str, cmd->text.pos, cmd->text.color); break;
-      case mui::MU_COMMAND_RECT: r_draw_rect(cmd->rect.rect, cmd->rect.color); break;
-      case mui::MU_COMMAND_ICON: r_draw_icon(cmd->icon.id, cmd->icon.rect, cmd->icon.color); break;
-      case mui::MU_COMMAND_CLIP: r_set_clip_rect(cmd->clip.rect); break;
+      case mui::CmdType::TEXT: r_draw_text(cmd->text.str, cmd->text.pos, cmd->text.color); break;
+      case mui::CmdType::RECT: r_draw_rect(cmd->rect.rect, cmd->rect.color); break;
+      case mui::CmdType::ICON: r_draw_icon(cmd->icon.id, cmd->icon.rect, cmd->icon.color); break;
+      case mui::CmdType::CLIP: r_set_clip_rect(cmd->clip.rect); break;
       }
     }
 

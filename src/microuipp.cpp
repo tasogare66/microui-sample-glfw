@@ -316,7 +316,7 @@ void input_text(Context* ctx, const char* text) {
 ** commandlist
 **============================================================================*/
 
-Command* push_command(Context* ctx, int32_t type, int32_t size) {
+Command* push_command(Context* ctx, CmdType type, int32_t size) {
   Command* cmd = (Command*)(ctx->command_list.items.data() + ctx->command_list.idx);
   assert(ctx->command_list.idx + size < MU_COMMANDLIST_SIZE);
   cmd->base.type = type;
@@ -332,7 +332,7 @@ int32_t next_command(Context* ctx, Command** cmd) {
     *cmd = (Command*)ctx->command_list.items.data();
   }
   while ((char*)*cmd != ctx->command_list.items.data() + ctx->command_list.idx) {
-    if ((*cmd)->type != MU_COMMAND_JUMP) { return 1; }
+    if ((*cmd)->type != CmdType::JUMP) { return 1; }
     *cmd = reinterpret_cast<Command*>((*cmd)->jump.dst);
   }
   return 0;
@@ -340,14 +340,14 @@ int32_t next_command(Context* ctx, Command** cmd) {
 
 static Command* push_jump(Context* ctx, Command* dst) {
   Command* cmd;
-  cmd = push_command(ctx, MU_COMMAND_JUMP, sizeof(JumpCommand));
+  cmd = push_command(ctx, CmdType::JUMP, sizeof(JumpCommand));
   cmd->jump.dst = dst;
   return cmd;
 }
 
 void set_clip(Context* ctx, Rect rect) {
   Command* cmd;
-  cmd = push_command(ctx, MU_COMMAND_CLIP, sizeof(ClipCommand));
+  cmd = push_command(ctx, CmdType::CLIP, sizeof(ClipCommand));
   cmd->clip.rect = rect;
 }
 
@@ -355,7 +355,7 @@ void draw_rect(Context* ctx, Rect rect, Color color) {
   Command* cmd;
   rect = rect.insert(get_clip_rect(ctx));
   if (rect.w > 0 && rect.h > 0) {
-    cmd = push_command(ctx, MU_COMMAND_RECT, sizeof(RectCommand));
+    cmd = push_command(ctx, CmdType::RECT, sizeof(RectCommand));
     cmd->rect.rect = rect;
     cmd->rect.color = color;
   }
@@ -378,7 +378,7 @@ void draw_text(Context* ctx, muFont font, const char* str, int32_t len, Vec2 pos
   if (clipped == MU_CLIP_PART) { set_clip(ctx, get_clip_rect(ctx)); }
   /* add command */
   if (len < 0) { len = static_cast<int32_t>(strlen(str)); }
-  cmd = push_command(ctx, MU_COMMAND_TEXT, sizeof(TextCommand) + len);
+  cmd = push_command(ctx, CmdType::TEXT, sizeof(TextCommand) + len);
   memcpy(cmd->text.str, str, len);
   cmd->text.str[len] = '\0';
   cmd->text.pos = pos;
@@ -395,7 +395,7 @@ void draw_icon(Context* ctx, int32_t id, Rect rect, Color color) {
   if (clipped == MU_CLIP_ALL) { return; }
   if (clipped == MU_CLIP_PART) { set_clip(ctx, get_clip_rect(ctx)); }
   /* do icon command */
-  cmd = push_command(ctx, MU_COMMAND_ICON, sizeof(IconCommand));
+  cmd = push_command(ctx, CmdType::ICON, sizeof(IconCommand));
   cmd->icon.id = id;
   cmd->icon.rect = rect;
   cmd->icon.color = color;

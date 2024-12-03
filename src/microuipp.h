@@ -43,13 +43,13 @@ namespace mui{
     MU_CLIP_ALL
   };
 
-  enum {
-    MU_COMMAND_JUMP = 1,
-    MU_COMMAND_CLIP,
-    MU_COMMAND_RECT,
-    MU_COMMAND_TEXT,
-    MU_COMMAND_ICON,
-    MU_COMMAND_MAX
+  enum class CmdType : int32_t {
+    JUMP = 1,
+    CLIP,
+    RECT,
+    TEXT,
+    ICON,
+    MAX
   };
 
   enum {
@@ -144,7 +144,7 @@ namespace mui{
   };
   struct PoolItem { muId id; int last_update; };
 
-  struct BaseCommand { int type, size; };
+  struct BaseCommand { CmdType type; int32_t size; };
   struct JumpCommand { BaseCommand base; void* dst; };
   struct ClipCommand { BaseCommand base; Rect rect; };
   struct RectCommand { BaseCommand base; Rect rect; Color color; };
@@ -152,7 +152,7 @@ namespace mui{
   struct IconCommand { BaseCommand base; Rect rect; int id; Color color; };
 
   union Command {
-    int type;
+    CmdType type;
     BaseCommand base;
     JumpCommand jump;
     ClipCommand clip;
@@ -267,7 +267,7 @@ namespace mui{
   void input_keyup(Context* ctx, int32_t key);
   void input_text(Context* ctx, const char* text);
 
-  Command* push_command(Context* ctx, int32_t type, int32_t size);
+  Command* push_command(Context* ctx, CmdType type, int32_t size);
   int32_t next_command(Context* ctx, Command** cmd);
   void set_clip(Context* ctx, Rect rect);
   void draw_rect(Context* ctx, Rect rect, Color color);
